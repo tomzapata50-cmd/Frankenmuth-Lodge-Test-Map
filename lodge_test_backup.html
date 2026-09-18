@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Frankenmuth Lodge Test Map</title>
+
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+
+    <style>
+      body {
+        margin: 0;
+        padding: 20px;
+        font-family: Arial, sans-serif;
+        background: #f7f7f7;
+      }
+
+      h1 {
+        text-align: center;
+        color: #2c5530;
+        margin-bottom: 8px;
+      }
+
+      .info {
+        text-align: center;
+        margin-bottom: 14px;
+        color: #555;
+      }
+
+      .test-banner {
+        max-width: 900px;
+        margin: 0 auto 16px;
+        padding: 10px 14px;
+        border: 2px solid #9a6b00;
+        border-radius: 8px;
+        background: #fff7db;
+        font-weight: bold;
+        text-align: center;
+      }
+
+      .controls {
+        max-width: 900px;
+        margin: 0 auto 14px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .controls label {
+        font-weight: bold;
+      }
+
+      .controls select,
+      .controls button {
+        min-height: 42px;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid #999;
+        font-size: 16px;
+      }
+
+      .controls button {
+        cursor: pointer;
+        background: white;
+        color: #2c5530;
+        font-weight: bold;
+      }
+
+      #map-wrapper {
+        position: relative;
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+
+      #map {
+        height: 600px;
+        width: 100%;
+        border: 2px solid #333;
+        border-radius: 10px;
+      }
+
+      .locate-btn {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 500;
+        background: #fff;
+        border: 2px solid rgba(0, 0, 0, 0.2);
+        border-radius: 6px;
+        padding: 10px 14px;
+        font-weight: bold;
+        color: #2c5530;
+        cursor: pointer;
+        box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+      }
+
+      .locate-btn:hover {
+        background: #f3f7f4;
+      }
+
+      .locate-btn:disabled {
+        opacity: 0.7;
+        cursor: wait;
+      }
+
+      .popup-title {
+        margin: 0 0 6px;
+        color: #2c5530;
+      }
+
+      .popup-row {
+        margin: 5px 0;
+      }
+
+      .demo-note {
+        color: #8a5d00;
+        font-weight: bold;
+      }
+
+      @media (max-width: 650px) {
+        body {
+          padding: 10px;
+        }
+
+        #map {
+          height: 520px;
+        }
+
+        .controls {
+          align-items: stretch;
+        }
+
+        .controls select,
+        .controls button {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>🏪 Frankenmuth Lodge Test Map</h1>
+
+    <div class="test-banner">
+      TEST COPY — this file is separate from your original Frankenmuth map.
+    </div>
+
+    <div class="info">
+      We are using the Bavarian Inn Lodge as the advanced test location.
+    </div>
+
+    <div class="controls">
+      <label for="seasonSelect">Hours:</label>
+      <select id="seasonSelect">
+        <option value="summer">Summer</option>
+        <option value="winter">Winter</option>
+      </select>
+
+      <button id="showLodgeBtn" type="button">🏨 Show Lodge</button>
+    </div>
+
+    <div id="map-wrapper">
+      <div id="map"></div>
+
+      <button id="locateBtn" class="locate-btn" type="button">
+        📍 YOU ARE HERE
+      </button>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+      const map = L.map("map").setView([43.3314, -83.7388], 14);
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap contributors",
+      }).addTo(map);
+
+      const shops = [
+        {
+          coords: [43.31405, -83.73654],
+          name: "Bronner's Christmas Wonderland",
+          category: "Holiday Store",
+          description:
+            "The world's largest Christmas store with over 50,000 decorative items.",
+        },
+        {
+          coords: [43.32677, -83.73985],
+          name: "Bavarian Inn Restaurant",
+          category: "Restaurant",
+          description:
+            "Famous for authentic German cuisine and family-style chicken dinners.",
+        },
+        {
+          coords: [43.32691, -83.7411],
+          name: "Zehnder's Restaurant",
+          category: "Restaurant",
+          description:
+            "Historic restaurant known for world-famous chicken dinners since 1856.",
+        },
+        {
+          coords: [43.32397, -83.73917],
+          name: "Frankenmuth River Place Shops",
+          category: "Shopping Center",
+          description:
+            "Unique shops featuring local crafts, gifts, and specialty items.",
+        },
+        {
+          coords: [43.329118, -83.739115],
+          name: "Frankenmuth Cheese Haus",
+          category: "Specialty Food",
+          description:
+            "Premium cheeses, wines, and gourmet foods from around the world.",
+        },
+        {
+          coords: [43.3265, -83.7366],
+          name: "Bavarian Inn Lodge",
+          category: "Hotel / Water Park",
+          description:
+            "Advanced test location for our Frankenmuth map.",
+          address: "TEST DATA — replace with verified Lodge address",
+          phone: "TEST DATA — replace with verified Lodge phone",
+          summerHours: "TEST DATA — enter verified summer hours",
+          winterHours: "TEST DATA — enter verified winter hours",
+          restroom: true,
+          parking: true,
+          waterPark: true,
+          website: "TEST DATA — enter verified website",
+          advanced: true,
+        },
+      ];
+
+      let userMarker = null;
+      let userCircle = null;
+      let userLatLng = null;
+      let lodgeMarker = null;
+
+      const seasonSelect = document.getElementById("seasonSelect");
+      const locateBtn = document.getElementById("locateBtn");
+      const showLodgeBtn = document.getElementById("showLodgeBtn");
+
+      function milesBetween(lat1, lon1, lat2, lon2) {
+        const earthRadiusMiles = 3958.8;
+        const toRadians = (degrees) => (degrees * Math.PI) / 180;
+
+        const dLat = toRadians(lat2 - lat1);
+        const dLon = toRadians(lon2 - lon1);
+
+        const a =
+          Math.sin(dLat / 2) ** 2 +
+          Math.cos(toRadians(lat1)) *
+            Math.cos(toRadians(lat2)) *
+            Math.sin(dLon / 2) ** 2;
+
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return earthRadiusMiles * c;
+      }
+
+      function buildPopup(shop) {
+        if (!shop.advanced) {
+          return `
+            <h3>${shop.name}</h3>
+            <strong>${shop.category}</strong><br>
+            ${shop.description}
+          `;
+        }
+
+        const selectedSeason = seasonSelect.value;
+        const hours =
+          selectedSeason === "summer"
+            ? shop.summerHours
+            : shop.winterHours;
+
+        let distanceText = "Use YOU ARE HERE to calculate distance.";
+
+        if (userLatLng) {
+          const miles = milesBetween(
+            userLatLng[0],
+            userLatLng[1],
+            shop.coords[0],
+            shop.coords[1],
+          );
+
+          distanceText = `${miles.toFixed(2)} miles from your location`;
+        }
+
+        return `
+          <h3 class="popup-title">${shop.name}</h3>
+
+          <div class="popup-row">
+            <strong>${shop.category}</strong>
+          </div>
+
+          <div class="popup-row">${shop.description}</div>
+
+          <hr>
+
+          <div class="popup-row">
+            <strong>Address:</strong><br>
+            <span class="demo-note">${shop.address}</span>
+          </div>
+
+          <div class="popup-row">
+            <strong>Phone:</strong><br>
+            <span class="demo-note">${shop.phone}</span>
+          </div>
+
+          <div class="popup-row">
+            <strong>${selectedSeason === "summer" ? "Summer" : "Winter"} Hours:</strong><br>
+            <span class="demo-note">${hours}</span>
+          </div>
+
+          <div class="popup-row">
+            <strong>Parking:</strong> ${shop.parking ? "Yes" : "No"}<br>
+            <strong>Restrooms:</strong> ${shop.restroom ? "Yes" : "No"}<br>
+            <strong>Water Park:</strong> ${shop.waterPark ? "Yes" : "No"}
+          </div>
+
+          <div class="popup-row">
+            <strong>Distance:</strong><br>
+            ${distanceText}
+          </div>
+
+          <div class="popup-row">
+            <strong>Website:</strong><br>
+            <span class="demo-note">${shop.website}</span>
+          </div>
+        `;
+      }
+
+      shops.forEach((shop) => {
+        const marker = L.marker(shop.coords).addTo(map);
+        marker.bindPopup(() => buildPopup(shop));
+
+        if (shop.name === "Bavarian Inn Lodge") {
+          lodgeMarker = marker;
+        }
+      });
+
+      function showUserLocation(latlng, accuracy) {
+        if (userMarker) {
+          map.removeLayer(userMarker);
+        }
+
+        if (userCircle) {
+          map.removeLayer(userCircle);
+        }
+
+        userLatLng = latlng;
+
+        userMarker = L.marker(latlng)
+          .addTo(map)
+          .bindPopup("📍 YOU ARE HERE")
+          .openPopup();
+
+        userCircle = L.circle(latlng, {
+          radius: accuracy || 25,
+          color: "#2c5530",
+          fillColor: "#2c5530",
+          fillOpacity: 0.2,
+        }).addTo(map);
+
+        map.setView(latlng, 17);
+      }
+
+      locateBtn.addEventListener("click", () => {
+        if (!navigator.geolocation) {
+          alert("Geolocation is not supported by this browser.");
+          return;
+        }
+
+        locateBtn.disabled = true;
+        locateBtn.textContent = "Locating...";
+
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const latlng = [
+              position.coords.latitude,
+              position.coords.longitude,
+            ];
+
+            showUserLocation(
+              latlng,
+              position.coords.accuracy || 25,
+            );
+
+            locateBtn.textContent = "📍 YOU ARE HERE";
+            locateBtn.disabled = false;
+          },
+          () => {
+            alert(
+              "Could not find your location. Use VS Code Live Server and make sure location permission is enabled.",
+            );
+
+            locateBtn.textContent = "📍 YOU ARE HERE";
+            locateBtn.disabled = false;
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 20000,
+            maximumAge: 0,
+          },
+        );
+      });
+
+      seasonSelect.addEventListener("change", () => {
+        if (lodgeMarker && lodgeMarker.isPopupOpen()) {
+          lodgeMarker.setPopupContent(
+            buildPopup(
+              shops.find((shop) => shop.name === "Bavarian Inn Lodge"),
+            ),
+          );
+        }
+      });
+
+      showLodgeBtn.addEventListener("click", () => {
+        const lodge = shops.find(
+          (shop) => shop.name === "Bavarian Inn Lodge",
+        );
+
+        map.setView(lodge.coords, 17);
+
+        if (lodgeMarker) {
+          lodgeMarker.openPopup();
+        }
+      });
+    </script>
+  </body>
+</html>
